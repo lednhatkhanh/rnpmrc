@@ -45,7 +45,7 @@ pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
     match config.command.as_str() {
         "create" => create_file(&config, PATH)?,
         "open" => open_file(&config, PATH)?,
-        "symlink" => symlink_file(&config, PATH)?,
+        "symlink" => symlink_file(&config, ".npmrc", PATH)?,
         "list" => list_files(PATH)?,
         "remove" => remove_file(&config, PATH)?,
         _ => return Err(Box::from("Unknown command")),
@@ -59,7 +59,7 @@ fn create_dir(path: &str) -> Result<(), io::Error> {
 
     if !dir_exists {
         println!("Creating directory {}...", path);
-        fs::DirBuilder::new().create(path)?;
+        fs::DirBuilder::new().recursive(true).create(path)?;
         println!("Succeed");
     }
 
@@ -101,7 +101,7 @@ fn open_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn symlink_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
+fn symlink_file(config: &Config, dest: &str, base_path: &str) -> Result<(), Box<dyn Error>> {
     let full_path = config.get_full_path(base_path)?;
     let file_exists = Path::new(&full_path).is_file();
     let npmrc_file_exists = Path::new(".npmrc").is_file();
@@ -109,12 +109,12 @@ fn symlink_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> 
     if file_exists {
         if npmrc_file_exists {
             println!("Removing .npmrc...");
-            fs::remove_file(".npmrc")?;
+            fs::remove_file(dest)?;
             println!("Succeed");
         }
 
         println!("Creating symlink for {}", full_path);
-        unix::fs::symlink(full_path, ".npmrc")?;
+        unix::fs::symlink(full_path, dest)?;
         println!("Succeed");
 
         Ok(())
@@ -167,11 +167,13 @@ fn remove_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
 mod tests {
     use super::*;
 
-    const PATH: &str = ".test";
+    const ROOT_PATH: &str = ".test";
+    const NPMRC_PATH: &str = ".test/.npmrc";
+    const PATH: &str = ".test/.rnpm";
 
     fn remove_test_dir() -> Result<(), io::Error> {
-        if Path::new(PATH).is_dir() {
-            return fs::remove_dir_all(PATH);
+        if Path::new(ROOT_PATH).is_dir() {
+            fs::remove_dir_all(ROOT_PATH)?;
         }
 
         Ok(())
@@ -271,6 +273,40 @@ mod tests {
         };
 
         assert_eq!(remove_file(&config, PATH).is_err(), true);
+
+        assert_eq!(after_each().is_ok(), true);
+    }
+
+    #[test]
+    fn symlink_file_success() {
+        assert_eq!(before_each().is_ok(), true);
+
+        let config = Config {
+            file_name: Some(String::from("test")),
+            command: String::from("create"),
+            editor: None,
+        };
+
+        assert_eq!(create_file(&config, PATH).is_ok(), true);
+
+        assert_eq!(symlink_file(&config, NPMRC_PATH, PATH).is_ok(), true);
+        assert_eq!(fs::read_link(NPMRC_PATH).is_ok(), true);
+
+        assert_eq!(after_each().is_ok(), true);
+    }
+
+    #[test]
+    fn symlink_file_error_when_file_doesnot_exist() {
+        assert_eq!(before_each().is_ok(), true);
+
+        let config = Config {
+            file_name: Some(String::from("test")),
+            command: String::from("create"),
+            editor: None,
+        };
+
+        assert_eq!(symlink_file(&config, NPMRC_PATH, PATH).is_err(), true);
+        assert_eq!(fs::read_link(NPMRC_PATH).is_ok(), false);
 
         assert_eq!(after_each().is_ok(), true);
     }
