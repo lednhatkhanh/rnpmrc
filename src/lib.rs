@@ -4,8 +4,7 @@ use std::fs;
 use std::io;
 use std::os::unix;
 use std::path::Path;
-
-extern crate subprocess;
+use std::process::Command;
 
 pub struct Config {
     file_name: Option<String>,
@@ -95,7 +94,7 @@ fn open_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
     };
 
     if file_exists {
-        subprocess::Exec::cmd(process_name).arg(&full_path).join()?;
+        Command::new(process_name).arg(&full_path).status()?;
         Ok(())
     } else {
         Err(Box::from(format!("{} not found", full_path)))
