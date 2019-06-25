@@ -1,3 +1,7 @@
 /target
 **/*.rs.bk
 Cargo.lock
+.test
+.idea
+.vscode
+.DS_Store
