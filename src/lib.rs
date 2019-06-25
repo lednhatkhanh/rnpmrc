@@ -163,3 +163,33 @@ fn remove_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
         Err(Box::from(format!("{} doesn't exist", full_path)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const PATH: &str = ".test";
+
+    fn remove_test_dir() -> Result<(), io::Error> {
+        fs::remove_dir(PATH)
+    }
+
+    #[test]
+    fn create_dir_success() {
+        assert_eq!(create_dir(PATH).is_ok(), true);
+        assert_eq!(Path::new(PATH).is_dir(), true);
+
+        assert_eq!(remove_test_dir().is_ok(), true);
+    }
+
+    #[test]
+    fn create_dir_ignore_when_exists() {
+        assert_eq!(create_dir(PATH).is_ok(), true);
+        assert_eq!(Path::new(PATH).is_dir(), true);
+
+        assert_eq!(create_dir(PATH).is_ok(), true);
+        assert_eq!(Path::new(PATH).is_dir(), true);
+
+        assert_eq!(remove_test_dir().is_ok(), true);
+    }
+}

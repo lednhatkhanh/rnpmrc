@@ -30,7 +30,7 @@
         <entry file="file://$PROJECT_DIR$/src/main.rs">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="210">
-              <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+              <caret line="10" selection-start-line="10" selection-end-line="10" />
             </state>
           </provider>
         </entry>
@@ -38,8 +38,12 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/lib.rs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="386">
-              <caret line="54" column="10" lean-forward="true" selection-start-line="54" selection-start-column="10" selection-end-line="54" selection-end-column="10" />
+            <state relative-caret-position="536">
+              <caret line="192" column="52" selection-start-line="192" selection-start-column="52" selection-end-line="192" selection-end-column="52" />
+              <folding>
+                <element signature="e#4627#4628#0" expanded="true" />
+                <element signature="e#4662#4663#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -49,6 +53,7 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>recursive</find>
+      <find>PATH</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -93,11 +98,6 @@
             <path>
               <item name="rnpm" type="b2602c69:ProjectViewProjectNode" />
               <item name="rnpm" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="rnpm" type="b2602c69:ProjectViewProjectNode" />
-              <item name="rnpm" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -146,12 +146,12 @@
       <workItem from="1561426177719" duration="1862000" />
       <workItem from="1561432944664" duration="7780000" />
       <workItem from="1561464892796" duration="921000" />
-      <workItem from="1561466099358" duration="5275000" />
+      <workItem from="1561466099358" duration="7176000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="18152000" />
+    <option name="totallyTimeSpent" value="20053000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
@@ -182,13 +182,6 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/src/rust/src/libstd/fs.rs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="1810" column="13" selection-start-line="1810" selection-start-column="4" selection-end-line="1810" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.rnpm/.npmrc.default" />
     <entry file="file://$USER_HOME$/.cargo/registry/src/github.com-1ecc6299db9ec823/subprocess-0.1.18/src/builder.rs">
       <provider selected="true" editor-type-id="text-editor">
@@ -210,14 +203,25 @@
     <entry file="file://$PROJECT_DIR$/src/main.rs">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="210">
-          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/.rustup/toolchains/stable-x86_64-apple-darwin/lib/rustlib/src/rust/src/libstd/fs.rs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="215">
+          <caret line="1920" column="7" selection-start-line="1920" selection-start-column="7" selection-end-line="1920" selection-end-column="7" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/lib.rs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="386">
-          <caret line="54" column="10" lean-forward="true" selection-start-line="54" selection-start-column="10" selection-end-line="54" selection-end-column="10" />
+        <state relative-caret-position="536">
+          <caret line="192" column="52" selection-start-line="192" selection-start-column="52" selection-end-line="192" selection-end-column="52" />
+          <folding>
+            <element signature="e#4627#4628#0" expanded="true" />
+            <element signature="e#4662#4663#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
