@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[test]
-    fn create_dir_ignore_when_exists() {
+    fn create_dir_ignores_when_exists() {
         assert_eq!(before_each().is_ok(), true);
 
         assert_eq!(create_dir(PATH).is_ok(), true);
@@ -225,7 +225,7 @@ mod tests {
     }
 
     #[test]
-    fn error_when_file_exists() {
+    fn create_file_error_when_file_exists() {
         assert_eq!(before_each().is_ok(), true);
 
         let config = Config {
@@ -238,6 +238,39 @@ mod tests {
         assert_eq!(Path::new(&format!("{}/{}", PATH, "test")).is_file(), true);
 
         assert_eq!(create_file(&config, PATH).is_err(), true);
+
+        assert_eq!(after_each().is_ok(), true);
+    }
+
+    #[test]
+    fn remove_file_success() {
+        assert_eq!(before_each().is_ok(), true);
+
+        let config = Config {
+            file_name: Some(String::from("test")),
+            command: String::from("create"),
+            editor: None,
+        };
+
+        assert_eq!(create_file(&config, PATH).is_ok(), true);
+
+        assert_eq!(remove_file(&config, PATH).is_ok(), true);
+        assert_eq!(Path::new(&format!("{}/{}", PATH, "test")).exists(), false);
+
+        assert_eq!(after_each().is_ok(), true);
+    }
+
+    #[test]
+    fn remove_file_error_when_file_does_not_exist() {
+        assert_eq!(before_each().is_ok(), true);
+
+        let config = Config {
+            file_name: Some(String::from("test")),
+            command: String::from("create"),
+            editor: None,
+        };
+
+        assert_eq!(remove_file(&config, PATH).is_err(), true);
 
         assert_eq!(after_each().is_ok(), true);
     }
