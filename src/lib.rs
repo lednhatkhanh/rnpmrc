@@ -7,8 +7,6 @@ use std::path::Path;
 
 extern crate subprocess;
 
-const PATH: &str = ".rnpm";
-
 pub struct Config {
     file_name: Option<String>,
     command: String,
@@ -34,43 +32,45 @@ impl Config {
         })
     }
 
-    pub fn get_full_path(&self) -> Result<String, &'static str> {
+    pub fn get_full_path(&self, base_path: &str) -> Result<String, &'static str> {
         match &self.file_name {
-            Some(file_name) => Ok(format!("{}/{}", PATH, file_name)),
+            Some(file_name) => Ok(format!("{}/{}", base_path, file_name)),
             None => Err("Didn't get a file name"),
         }
     }
 }
 
 pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
-    match &config.command[..] {
-        "create" => create_file(&config)?,
-        "open" => open_file(&config)?,
-        "symlink" => symlink_file(&config)?,
-        "list" => list_files()?,
-        "remove" => remove_file(&config)?,
+    const PATH: &str = ".rnpm";
+
+    match config.command.as_str() {
+        "create" => create_file(&config, PATH)?,
+        "open" => open_file(&config, PATH)?,
+        "symlink" => symlink_file(&config, PATH)?,
+        "list" => list_files(PATH)?,
+        "remove" => remove_file(&config, PATH)?,
         _ => return Err(Box::from("Unknown command")),
     };
 
     Ok(())
 }
 
-fn create_dir(dir_path: &str) -> Result<(), io::Error> {
-    let dir_exists = Path::new(dir_path).is_dir();
+fn create_dir(path: &str) -> Result<(), io::Error> {
+    let dir_exists = Path::new(path).is_dir();
 
     if !dir_exists {
-        println!("Creating directory {}...", dir_path);
-        fs::DirBuilder::new().create(dir_path)?;
+        println!("Creating directory {}...", path);
+        fs::DirBuilder::new().create(path)?;
         println!("Succeed");
     }
 
     Ok(())
 }
 
-fn create_file(config: &Config) -> Result<(), Box<dyn Error>> {
-    create_dir(PATH)?;
+fn create_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
+    create_dir(base_path)?;
 
-    let full_path = config.get_full_path()?;
+    let full_path = config.get_full_path(base_path)?;
     let file_exists = Path::new(&full_path).is_file();
 
     if file_exists {
@@ -84,10 +84,10 @@ fn create_file(config: &Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn open_file(config: &Config) -> Result<(), Box<dyn Error>> {
-    create_dir(PATH)?;
+fn open_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
+    create_dir(base_path)?;
 
-    let full_path = config.get_full_path()?;
+    let full_path = config.get_full_path(base_path)?;
     let file_exists = Path::new(&full_path).is_file();
     let process_name = match &config.editor {
         Some(editor_name) => &editor_name[..],
@@ -102,8 +102,8 @@ fn open_file(config: &Config) -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn symlink_file(config: &Config) -> Result<(), Box<dyn Error>> {
-    let full_path = config.get_full_path()?;
+fn symlink_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
+    let full_path = config.get_full_path(base_path)?;
     let file_exists = Path::new(&full_path).is_file();
     let npmrc_file_exists = Path::new(".npmrc").is_file();
 
@@ -124,8 +124,8 @@ fn symlink_file(config: &Config) -> Result<(), Box<dyn Error>> {
     }
 }
 
-fn list_files() -> Result<(), Box<dyn Error>> {
-    let paths = fs::read_dir(PATH)?;
+fn list_files(base_path: &str) -> Result<(), Box<dyn Error>> {
+    let paths = fs::read_dir(base_path)?;
     let mut file_names = String::new();
 
     for entry in paths {
@@ -150,8 +150,8 @@ fn list_files() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn remove_file(config: &Config) -> Result<(), Box<dyn Error>> {
-    let full_path = config.get_full_path()?;
+fn remove_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
+    let full_path = config.get_full_path(base_path)?;
     let file_exists = Path::new(&full_path).is_file();
 
     if file_exists {
