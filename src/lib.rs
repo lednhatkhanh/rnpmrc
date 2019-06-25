@@ -74,14 +74,14 @@ fn create_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
     let file_exists = Path::new(&full_path).is_file();
 
     if file_exists {
-        println!("{} exists", full_path);
+        Err(Box::from(format!("{} exists", full_path)))
     } else {
         println!("Creating {}...", full_path);
         fs::File::create(&full_path)?;
         println!("Succeed");
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
 
 fn open_file(config: &Config, base_path: &str) -> Result<(), Box<dyn Error>> {
@@ -171,25 +171,75 @@ mod tests {
     const PATH: &str = ".test";
 
     fn remove_test_dir() -> Result<(), io::Error> {
-        fs::remove_dir(PATH)
+        if Path::new(PATH).is_dir() {
+            return fs::remove_dir_all(PATH);
+        }
+
+        Ok(())
+    }
+
+    fn before_each() -> Result<(), io::Error> {
+        remove_test_dir()
+    }
+
+    fn after_each() -> Result<(), io::Error> {
+        remove_test_dir()
     }
 
     #[test]
     fn create_dir_success() {
+        assert_eq!(before_each().is_ok(), true);
+
         assert_eq!(create_dir(PATH).is_ok(), true);
         assert_eq!(Path::new(PATH).is_dir(), true);
 
-        assert_eq!(remove_test_dir().is_ok(), true);
+        assert_eq!(after_each().is_ok(), true);
     }
 
     #[test]
     fn create_dir_ignore_when_exists() {
-        assert_eq!(create_dir(PATH).is_ok(), true);
-        assert_eq!(Path::new(PATH).is_dir(), true);
+        assert_eq!(before_each().is_ok(), true);
 
         assert_eq!(create_dir(PATH).is_ok(), true);
         assert_eq!(Path::new(PATH).is_dir(), true);
 
-        assert_eq!(remove_test_dir().is_ok(), true);
+        assert_eq!(create_dir(PATH).is_ok(), true);
+        assert_eq!(Path::new(PATH).is_dir(), true);
+
+        assert_eq!(after_each().is_ok(), true);
+    }
+
+    #[test]
+    fn create_file_success() {
+        assert_eq!(before_each().is_ok(), true);
+
+        let config = Config {
+            file_name: Some(String::from("test")),
+            command: String::from("create"),
+            editor: None,
+        };
+
+        assert_eq!(create_file(&config, PATH).is_ok(), true);
+        assert_eq!(Path::new(&format!("{}/{}", PATH, "test")).is_file(), true);
+
+        assert_eq!(after_each().is_ok(), true);
+    }
+
+    #[test]
+    fn error_when_file_exists() {
+        assert_eq!(before_each().is_ok(), true);
+
+        let config = Config {
+            file_name: Some(String::from("test")),
+            command: String::from("create"),
+            editor: None,
+        };
+
+        assert_eq!(create_file(&config, PATH).is_ok(), true);
+        assert_eq!(Path::new(&format!("{}/{}", PATH, "test")).is_file(), true);
+
+        assert_eq!(create_file(&config, PATH).is_err(), true);
+
+        assert_eq!(after_each().is_ok(), true);
     }
 }
