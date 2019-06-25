@@ -1,0 +1,8 @@
+[package]
+name = "rnpm"
+version = "0.1.0"
+authors = ["Khanh Le <lednhatkhanh@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+subprocess = "0.1.18"
