@@ -6,3 +6,6 @@ edition = "2018"
 
 [dependencies]
 dirs = "2.0.1"
+clap = "~2.33"
+failure = "0.1.5"
+exitfailure = "0.5.1"
