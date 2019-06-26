@@ -18,6 +18,11 @@ A cli tool to manage multiple `.npmrc` files written in rust.
 
 - Run `rnpmrc -h` for a list of all supported commands.
 
+## Build from source
+
+- You need to have `cargo` installed.
+- Run `cargo install rnpmrc`.
+
 ## License
 
 MIT
