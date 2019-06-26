@@ -3,6 +3,13 @@ name = "rnpmrc"
 version = "0.1.0"
 authors = ["Khanh Le <lednhatkhanh@gmail.com>"]
 edition = "2018"
+license = "MIT"
+license-file = "LICENSE"
+description = "A tool to manage multiple .npmrc files"
+repository = "https://github.com/lednhatkhanh/rnpmrc"
 
 [dependencies]
 dirs = "2.0.1"
+clap = "~2.33"
+failure = "0.1.5"
+exitfailure = "0.5.1"
