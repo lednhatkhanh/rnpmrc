@@ -48,17 +48,21 @@ impl Config {
 }
 
 pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
-    let mut config_dir = match dirs::home_dir() {
+    let home_dir = match dirs::home_dir() {
         Some(path_buffer) => path_buffer,
         None => return Err(Box::from("Error looking for home dir")),
     };
 
+    let mut config_dir = PathBuf::from(&home_dir);
     config_dir.push(".rnpmrc");
+
+    let mut npmrc_path = PathBuf::from(&home_dir);
+    npmrc_path.push(".npmrc");
 
     match config.command.as_str() {
         "create" => create_file(&config, &config_dir)?,
         "open" => open_file(&config, &config_dir)?,
-        "symlink" => symlink_file(&config, Path::new(".npmrc"), &config_dir)?,
+        "symlink" => symlink_file(&config, &npmrc_path, &config_dir)?,
         "list" => list_files(&config_dir)?,
         "remove" => remove_file(&config, &config_dir)?,
         _ => return Err(Box::from("Unknown command")),
@@ -117,7 +121,7 @@ fn open_file(config: &Config, config_dir: &Path) -> Result<(), Box<dyn Error>> {
 fn symlink_file(config: &Config, dest: &Path, config_dir: &Path) -> Result<(), Box<dyn Error>> {
     let file_path = config.get_file_path(config_dir)?;
     let file_exists = file_path.is_file();
-    let npmrc_file_exists = Path::new(".npmrc").is_file();
+    let npmrc_file_exists = dest.is_file();
 
     if file_exists {
         if npmrc_file_exists {
