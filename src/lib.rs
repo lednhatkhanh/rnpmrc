@@ -46,6 +46,12 @@ pub fn run(matches: &ArgMatches) -> Result<(), failure::Error> {
             remove_profile(profile, &config_paths.config_dir)
                 .with_context(|_| format!("Failed to remove profile \"{}\"", profile))?;
         }
+        ("backup", Some(backup_matches)) => {
+            let profile = backup_matches.value_of("profile").unwrap();
+
+            create_backup_profile(profile, &config_paths.config_dir, &config_paths.home_dir)
+                .with_context(|_| format!("Failed to create a backup for \".npmrc\""))?;
+        }
         ("", None) => return Err(failure::err_msg("no subcommand was used")),
         _ => unreachable!(),
     };
@@ -81,6 +87,30 @@ fn create_config_dir(dir_path: &Path) -> Result<(), failure::Error> {
         fs::DirBuilder::new().recursive(true).create(dir_path)?;
         println!("Succeed");
     }
+
+    Ok(())
+}
+
+fn create_backup_profile(
+    profile: &str,
+    config_dir: &Path,
+    home_dir: &Path,
+) -> Result<(), failure::Error> {
+    let file_path = build_file_path(config_dir, &format!(".npmrc.{}", profile));
+    let npmrc_path = build_file_path(home_dir, ".npmrc");
+
+    if !exists_or_symlinked(&npmrc_path) {
+        return Err(failure::err_msg(format!(
+            "file {:?} doesn't exist",
+            npmrc_path
+        )));
+    }
+
+    create_profile(profile, &config_dir)?;
+
+    print!("Copying data from {:?} to {:?}... ", npmrc_path, file_path);
+    fs::copy(&npmrc_path, &file_path)?;
+    println!("Succeed");
 
     Ok(())
 }

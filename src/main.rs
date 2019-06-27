@@ -60,6 +60,15 @@ fn main() -> Result<(), ExitFailure> {
                 ),
         )
         .subcommand(SubCommand::with_name("status").about("Shows current activate profile"))
+        .subcommand(
+            SubCommand::with_name("backup")
+                .about("Creates a profile from .npmrc file")
+                .arg(
+                    Arg::with_name("profile")
+                        .help("Profile name")
+                        .required(true),
+                ),
+        )
         .get_matches();
 
     rnpmrc::run(&matches)?;
