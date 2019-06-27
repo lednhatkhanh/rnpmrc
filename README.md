@@ -10,7 +10,7 @@ A cli tool to manage multiple `.npmrc` files written in rust.
 
 - Relatively simple but still contains enough common commands.
 - Written in `rust`.
-- Extremely small, only `2kb` in size.
+- Extremely small, only `4kb` in size.
 - Readable messages.
 - Suggestion when typing the wrong command.
 
