@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #[macro_use]
 extern crate clap;
 extern crate dirs;
@@ -36,7 +37,7 @@ fn main() -> Result<(), ExitFailure> {
                         .long("editor")
                         .help("Editor to open file")
                         .value_name("EDITOR")
-                        .default_value("vim")
+                        .default_value("vi")
                         .takes_value(true),
                 ),
         )
@@ -59,7 +60,7 @@ fn main() -> Result<(), ExitFailure> {
         .subcommand(SubCommand::with_name("status").about("Show current activate profile"))
         .get_matches();
 
-    rnpmrc::run(matches)?;
+    rnpmrc::run(&matches)?;
 
     Ok(())
 }

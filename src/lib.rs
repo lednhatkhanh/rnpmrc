@@ -1,56 +1,67 @@
-use clap::ArgMatches;
-use failure::ResultExt;
+#![forbid(unsafe_code)]
 use std::fs;
 use std::os::unix;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use clap::ArgMatches;
+use failure::ResultExt;
 
-pub fn run(matches: ArgMatches) -> Result<(), failure::Error> {
-    let (home_dir, config_dir) = get_config_path()?;
+/// Handle all subcommands and calls appropriate function
+#[inline]
+pub fn run(matches: &ArgMatches) -> Result<(), failure::Error> {
+    let config_paths = get_config_paths()?;
 
-    create_config_dir(&config_dir).with_context(|_| "failed to create config dir".to_string())?;
-    create_config_file(&config_dir).with_context(|_| "failed to create config file".to_string())?;
+    create_config_dir(&config_paths.config_dir).with_context(|_| "failed to create config dir")?;
 
     match matches.subcommand() {
         ("create", Some(create_matches)) => {
             let profile = create_matches.value_of("profile").unwrap();
 
-            create_profile(profile, &config_dir)
+            create_profile(profile, &config_paths.config_dir)
                 .with_context(|_| format!("Failed to create profile \"{}\"", profile))?;
         }
         ("list", Some(_)) => {
-            list_all_profiles(&config_dir).with_context(|_| "Failed to list all profiles")?;
+            list_all_profiles(&config_paths.config_dir).with_context(|_| "Failed to list all profiles")?;
         }
         ("open", Some(open_matcher)) => {
             let profile = open_matcher.value_of("profile").unwrap();
             let editor = open_matcher.value_of("editor").unwrap();
 
-            open_profile(profile, &config_dir, editor)
+            open_profile(profile, &config_paths.config_dir, editor)
                 .with_context(|_| format!("Failed to open profile \"{}\"", profile))?;
         }
         ("activate", Some(activate_matcher)) => {
             let profile = activate_matcher.value_of("profile").unwrap();
 
-            activate_profile(profile, &config_dir, &home_dir)
+            activate_profile(profile, &config_paths.config_dir, &config_paths.home_dir)
                 .with_context(|_| format!("Failed to activate profile \"{}\"", profile))?;
         }
         ("status", Some(_)) => {
-            show_active_profile(&config_dir, &home_dir);
+            show_active_profile(&config_paths.config_dir, &config_paths.home_dir);
         }
         ("remove", Some(remove_matches)) => {
             let profile = remove_matches.value_of("profile").unwrap();
 
-            remove_profile(profile, &config_dir)
+            remove_profile(profile, &config_paths.config_dir)
                 .with_context(|_| format!("Failed to remove profile \"{}\"", profile))?;
         }
-        ("", None) => eprintln!("No subcommand was used"),
+        ("", None) => return Err(failure::err_msg("no subcommand was used")),
         _ => unreachable!(),
     };
 
     Ok(())
 }
 
-fn get_config_path() -> Result<(PathBuf, PathBuf), failure::Error> {
+/// All static paths that used in the cli
+struct ConfigPaths {
+    /// Home directory, different with each OS
+    home_dir: PathBuf,
+    /// Config directory that holds all profiles, `.rnpmrc`
+    config_dir: PathBuf,
+}
+
+/// Gets all config paths including the home directory and the config directory paths
+fn get_config_paths() -> Result<ConfigPaths, failure::Error> {
     let home_dir = match dirs::home_dir() {
         Some(path) => path,
         None => return Err(failure::err_msg("did not find home directory")),
@@ -59,36 +70,11 @@ fn get_config_path() -> Result<(PathBuf, PathBuf), failure::Error> {
     let mut config_dir = PathBuf::from(&home_dir);
     config_dir.push(".rnpmrc");
 
-    Ok((home_dir, config_dir))
+    Ok(ConfigPaths { home_dir, config_dir })
 }
 
-fn update_config_file(content: &str, config_dir: &Path) -> Result<(), failure::Error> {
-    let config_file = build_file_path(config_dir, ".config");
-
-    if !config_file.is_file() {
-        return Err(failure::err_msg(format!(
-            "file {:?} doesn't exists",
-            config_file
-        )));
-    }
-
-    fs::write(&config_file, content)?;
-
-    Ok(())
-}
-
-pub fn create_config_file(config_dir: &Path) -> Result<(), failure::Error> {
-    let file_path = build_file_path(config_dir, ".config");
-
-    if !file_path.is_file() {
-        print!("Creating file {:?}... ", file_path);
-        fs::File::create(file_path)?;
-        println!("Succeed");
-    }
-
-    Ok(())
-}
-
+/// Creates the config dir `.rnpmrc` in home directory
+/// Ignores if directory already exists
 fn create_config_dir(dir_path: &Path) -> Result<(), failure::Error> {
     let dir_exists = dir_path.is_dir();
 
@@ -101,23 +87,26 @@ fn create_config_dir(dir_path: &Path) -> Result<(), failure::Error> {
     Ok(())
 }
 
+/// Creates new profile
+/// Throws error if profile with the same name already exists
 fn create_profile(profile: &str, config_dir: &Path) -> Result<(), failure::Error> {
     let file_path = build_file_path(config_dir, &format!(".npmrc.{}", profile));
 
     if file_path.is_file() {
-        Err(failure::err_msg(format!(
+        return Err(failure::err_msg(format!(
             "file {:?} already exists",
             file_path
-        )))
-    } else {
-        print!("Creating file {:?}... ", file_path);
-        fs::File::create(file_path)?;
-        println!("Succeed");
-
-        Ok(())
+        )));
     }
+
+    print!("Creating file {:?}... ", file_path);
+    fs::File::create(file_path)?;
+    println!("Succeed");
+
+    Ok(())
 }
 
+/// Lists all profiles in `.rnpmrc` directory
 fn list_all_profiles(config_dir: &Path) -> Result<(), failure::Error> {
     let paths = fs::read_dir(config_dir)?;
     let mut file_names = String::new();
@@ -145,20 +134,23 @@ fn list_all_profiles(config_dir: &Path) -> Result<(), failure::Error> {
     Ok(())
 }
 
+/// Opens a profile in editor, default is vi
 fn open_profile(profile: &str, config_dir: &Path, editor: &str) -> Result<(), failure::Error> {
     let file_path = build_file_path(config_dir, &format!(".npmrc.{}", profile));
 
     if file_path.is_file() {
         Command::new(editor).arg(file_path).status()?;
-        Ok(())
-    } else {
-        Err(failure::err_msg(format!(
-            "file {:?} doesn't exists",
-            file_path
-        )))
+        return Ok(());
     }
+
+    Err(failure::err_msg(format!(
+        "file {:?} doesn't exists",
+        file_path
+    )))
 }
 
+/// Removes a profile
+/// Shows error if file doesn't exist
 fn remove_profile(profile: &str, config_dir: &Path) -> Result<(), failure::Error> {
     let file_path = build_file_path(config_dir, &format!(".npmrc.{}", profile));
 
@@ -167,17 +159,18 @@ fn remove_profile(profile: &str, config_dir: &Path) -> Result<(), failure::Error
         fs::remove_file(file_path)?;
         println!("Succeed");
 
-        update_config_file("", &config_dir)?;
-
-        Ok(())
-    } else {
-        Err(failure::err_msg(format!(
-            "file {:?} doesn't exists",
-            file_path
-        )))
+        return Ok(());
     }
+
+    Err(failure::err_msg(format!(
+        "file {:?} doesn't exists",
+        file_path
+    )))
 }
 
+/// Creates a symbolic link from the profile to `.npmrc`
+/// Remove `.npmrc` file if it exists
+/// Throws error if profile not found
 fn activate_profile(
     profile: &str,
     config_dir: &Path,
@@ -203,33 +196,32 @@ fn activate_profile(
     unix::fs::symlink(&file_path, &npmrc_path)?;
     println!("Succeed");
 
-    update_config_file(&format!("active-profile={}", profile), &config_dir)?;
-
     Ok(())
 }
 
+/// Shows current active profile
+/// Active profile is what the `.npmrc` file is being linked to
 fn show_active_profile(config_dir: &Path, home_dir: &Path) {
     let npmrc_path = build_file_path(home_dir, ".npmrc");
 
-    match fs::read_link(&npmrc_path) {
-        Ok(info) => {
-            if info.is_file() && info.starts_with(&config_dir) {
-                if let Some(file_name) = info.file_name() {
-                    println!("{:?} is active", file_name);
-                } else {
-                    println!("No active profile");
-                }
+    if let Ok(info) = fs::read_link(&npmrc_path) {
+        if info.is_file() && info.starts_with(&config_dir) {
+            if let Some(file_name) = info.file_name() {
+                println!("{:?} is active", file_name);
             } else {
                 println!("No active profile");
             }
-        }
-        Err(_) => {
+        } else {
             println!("No active profile");
         }
-    };
+    }
+
+    println!("No active profile");
 }
 
 // Utilities
+
+/// Builds the full file path from the parent dir and file name
 fn build_file_path(dir_path: &Path, file_name: &str) -> PathBuf {
     let mut file_path = PathBuf::from(dir_path);
     file_path.push(file_name);
@@ -237,6 +229,7 @@ fn build_file_path(dir_path: &Path, file_name: &str) -> PathBuf {
     file_path
 }
 
+/// Checks if the path exits or is a symbolic link
 fn exists_or_symlinked(path: &Path) -> bool {
     if path.is_file() || path.is_dir() {
         return true;
