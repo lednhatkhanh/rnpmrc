@@ -15,17 +15,17 @@ fn main() -> Result<(), ExitFailure> {
         .author(crate_authors!())
         .subcommand(
             SubCommand::with_name("create")
-                .about("Create new profile")
+                .about("Creates new profile")
                 .arg(
                     Arg::with_name("profile")
                         .help("Profile name")
                         .required(true),
                 ),
         )
-        .subcommand(SubCommand::with_name("list").about("List all profiles"))
+        .subcommand(SubCommand::with_name("list").about("Lists all profiles"))
         .subcommand(
             SubCommand::with_name("open")
-                .about("Open a profile")
+                .about("Opens a profile")
                 .arg(
                     Arg::with_name("profile")
                         .help("Profile name")
@@ -42,11 +42,13 @@ fn main() -> Result<(), ExitFailure> {
                 ),
         )
         .subcommand(
-            SubCommand::with_name("remove").about("Remove profile").arg(
-                Arg::with_name("profile")
-                    .help("Profile name")
-                    .required(true),
-            ),
+            SubCommand::with_name("remove")
+                .about("Removes profile")
+                .arg(
+                    Arg::with_name("profile")
+                        .help("Profile name")
+                        .required(true),
+                ),
         )
         .subcommand(
             SubCommand::with_name("activate")
@@ -57,7 +59,7 @@ fn main() -> Result<(), ExitFailure> {
                         .required(true),
                 ),
         )
-        .subcommand(SubCommand::with_name("status").about("Show current activate profile"))
+        .subcommand(SubCommand::with_name("status").about("Shows current activate profile"))
         .get_matches();
 
     rnpmrc::run(&matches)?;
