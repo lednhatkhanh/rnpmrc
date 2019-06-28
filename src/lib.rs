@@ -50,7 +50,7 @@ pub fn run(matches: &ArgMatches) -> Result<(), failure::Error> {
             let profile = backup_matches.value_of("profile").unwrap();
 
             create_backup_profile(profile, &config_paths.config_dir, &config_paths.home_dir)
-                .with_context(|_| format!("Failed to create a backup for \".npmrc\""))?;
+                .with_context(|_| "Failed to create a backup for \".npmrc\"")?;
         }
         ("", None) => return Err(failure::err_msg("no subcommand was used")),
         _ => unreachable!(),
@@ -225,11 +225,8 @@ fn show_active_profile(config_dir: &Path, home_dir: &Path) {
         if info.is_file() && info.starts_with(&config_dir) {
             if let Some(file_name) = info.file_name() {
                 println!("{:?} is active", file_name);
-            } else {
-                println!("No active profile");
+                return;
             }
-        } else {
-            println!("No active profile");
         }
     }
 
